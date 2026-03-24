@@ -54,7 +54,7 @@ def main():
     # read
     read_p = sub.add_parser("read", help="Read recent messages")
     read_p.add_argument("--room", help="Room ID (uses default if not set)")
-    read_p.add_argument("--limit", type=int, default=10, help="Number of messages")
+    read_p.add_argument("--limit", type=int, default=10, choices=range(1, 101), metavar="N", help="Number of messages (1-100)")
 
     # rooms
     sub.add_parser("rooms", help="List joined rooms")
@@ -65,7 +65,7 @@ def main():
     sw_p.add_argument("--room", help="Room ID")
     sw_p.add_argument("--mention", help="User ID to mention")
     sw_p.add_argument("--no-mention", action="store_true", help="Skip default mention")
-    sw_p.add_argument("--timeout", type=int, default=30, help="Wait timeout in seconds")
+    sw_p.add_argument("--timeout", type=int, default=30, choices=range(1, 301), metavar="N", help="Wait timeout in seconds (1-300)")
 
     # config
     config_p = sub.add_parser("config", help="View or update configuration")

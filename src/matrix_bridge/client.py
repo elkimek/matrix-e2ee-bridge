@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import stat
+import time
 from html import escape as html_escape
 
 from nio import (
@@ -220,9 +221,9 @@ class MatrixE2EEClient:
         if after:
             return after
 
-        start = asyncio.get_event_loop().time()
+        start = time.monotonic()
         timeout_s = timeout_ms / 1000
-        while asyncio.get_event_loop().time() - start < timeout_s:
+        while time.monotonic() - start < timeout_s:
             await asyncio.sleep(2)
             fresh = await self.read_messages(room_id, 20)
             fresh_idx = next(

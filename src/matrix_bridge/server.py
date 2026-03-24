@@ -69,6 +69,7 @@ async def send_and_wait(
         wait_for: Optional user ID to wait for a reply from
         timeout: Seconds to wait for a reply (default 30)
     """
+    timeout = max(1, min(timeout, 300))
     event_id = await matrix.send_message(room_id, message, mention)
     replies = await matrix.get_new_messages(
         room_id,
@@ -90,6 +91,7 @@ async def read_messages(room_id: str, limit: int = 20) -> str:
         room_id: The Matrix room ID
         limit: Number of messages to fetch (default 20)
     """
+    limit = max(1, min(limit, 100))
     messages = await matrix.read_messages(room_id, limit)
     if not messages:
         return "No messages in room."
