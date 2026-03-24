@@ -1,6 +1,6 @@
 # matrix-e2ee-bridge
 
-A CLI and MCP server for sending and reading end-to-end encrypted (E2EE) Matrix messages. Designed for bot-to-bot communication — particularly [Claude Code](https://claude.ai/claude-code) talking to [OpenClaw](https://github.com/AnotherElkim/OpenClaw) via Matrix.
+A CLI and MCP server for sending and reading end-to-end encrypted (E2EE) Matrix messages. Designed for bot-to-bot communication — particularly [Claude Code](https://claude.ai/claude-code) talking to [OpenClaw](https://github.com/elkimek/OpenClaw) via Matrix.
 
 ## Why
 
@@ -162,6 +162,54 @@ Add to your `.mcp.json`:
 | `read_messages` | Read recent messages, decrypting E2EE automatically |
 | `list_rooms` | List joined rooms with encryption status |
 | `join_room` | Join a room by ID or alias |
+
+### Auto-connect on session start
+
+Add a `SessionStart` hook to `.claude/settings.local.json` so Claude Code announces itself on Matrix when you start a session:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "Read the last 10 messages from Matrix room !your-room:matrix.org using mcp__matrix__read_messages, send 'I'm online' via mcp__matrix__send_message, and return a summary of recent conversation.",
+            "timeout": 30,
+            "statusMessage": "Going online on Matrix..."
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Standalone bot
+
+The bridge includes a standalone bot (`basedclaude-bot`) that monitors a room and responds to mentions using an LLM API. Useful when Claude Code isn't running.
+
+```bash
+pip install '.[bot]'
+VENICE_API_KEY=your-key BASEDCLAUDE_ROOM='!room:matrix.org' basedclaude-bot
+```
+
+Configuration via environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VENICE_API_KEY` | (required) | API key for the LLM provider |
+| `BASEDCLAUDE_ROOM` | from config | Matrix room ID to monitor |
+| `BASEDCLAUDE_MODEL` | `claude-sonnet-4-6` | Model to use for responses |
+| `BASEDCLAUDE_API_URL` | `https://api.venice.ai/api/v1` | OpenAI-compatible API endpoint |
+| `BASEDCLAUDE_SYSTEM_PROMPT` | (built-in) | Custom system prompt |
+
+Run as a systemd user service for always-on operation:
+
+```bash
+systemctl --user enable --now basedclaude-bot
+```
 
 ### SSH fallback
 
