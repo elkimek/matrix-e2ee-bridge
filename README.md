@@ -1,6 +1,6 @@
 # matrix-e2ee-bridge
 
-A CLI and MCP server for sending and reading end-to-end encrypted (E2EE) Matrix messages. Designed for bot-to-bot communication — particularly [Claude Code](https://claude.ai/claude-code) talking to [OpenClaw](https://github.com/elkimek/OpenClaw) via Matrix.
+A CLI and MCP server for sending and reading end-to-end encrypted (E2EE) Matrix messages. Designed for bot-to-bot communication — particularly [Claude Code](https://claude.ai/claude-code) talking to OpenClaw bots via Matrix.
 
 ## Why
 
