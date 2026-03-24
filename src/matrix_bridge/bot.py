@@ -103,7 +103,7 @@ class BasedClaudeBot:
 
         try:
             response = await self._generate_response()
-            await self.matrix.send_message(self.room_id, response)
+            await self.matrix.send_message(self.room_id, response, mention=event.sender)
             self.context.append({"role": "assistant", "content": response})
             logger.info(f"Replied ({len(response)} chars)")
         except Exception:

@@ -112,8 +112,6 @@ class MatrixE2EEClient:
         content: dict = {"msgtype": "m.text", "body": text}
 
         if mention:
-            local = mention.replace("@", "").split(":")[0]
-            content["body"] = f"@{local} {text}"
             content["format"] = "org.matrix.custom.html"
             content["formatted_body"] = (
                 f'<a href="https://matrix.to/#/{html_escape(mention)}">'
