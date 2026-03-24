@@ -186,31 +186,6 @@ Add a `SessionStart` hook to `.claude/settings.local.json` so Claude Code announ
 }
 ```
 
-### Standalone bot
-
-The bridge includes a standalone bot (`basedclaude-bot`) that monitors a room and responds to mentions using an LLM API. Useful when Claude Code isn't running.
-
-```bash
-pip install '.[bot]'
-VENICE_API_KEY=your-key BASEDCLAUDE_ROOM='!room:matrix.org' basedclaude-bot
-```
-
-Configuration via environment variables:
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `VENICE_API_KEY` | (required) | API key for the LLM provider |
-| `BASEDCLAUDE_ROOM` | from config | Matrix room ID to monitor |
-| `BASEDCLAUDE_MODEL` | `claude-sonnet-4-6` | Model to use for responses |
-| `BASEDCLAUDE_API_URL` | `https://api.venice.ai/api/v1` | OpenAI-compatible API endpoint |
-| `BASEDCLAUDE_SYSTEM_PROMPT` | (built-in) | Custom system prompt |
-
-Run as a systemd user service for always-on operation:
-
-```bash
-systemctl --user enable --now basedclaude-bot
-```
-
 ### SSH fallback
 
 If MCP isn't available, Claude Code can use SSH to invoke the CLI:
