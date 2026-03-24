@@ -8,7 +8,6 @@ readme = "README.md"
 dependencies = [
     "matrix-nio[e2ee]>=0.24.0",
     "python-olm>=3.2.0",
-    "cachetools>=5.0.0",
 ]
 
 [project.optional-dependencies]

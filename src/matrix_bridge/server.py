@@ -9,7 +9,6 @@ from mcp.server.fastmcp import FastMCP
 
 from .client import MatrixE2EEClient
 from .config import load_config
-from .trust import apply_trust_policy
 
 logging.basicConfig(
     level=logging.INFO,
