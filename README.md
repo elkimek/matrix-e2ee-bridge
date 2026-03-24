@@ -1,6 +1,6 @@
 # matrix-e2ee-bridge
 
-A CLI tool for sending and reading end-to-end encrypted (E2EE) Matrix messages. Designed for bot-to-bot communication — particularly [Claude Code](https://claude.ai/claude-code) talking to [OpenClaw](https://github.com/AnotherElkim/OpenClaw) via Matrix.
+A CLI and MCP server for sending and reading end-to-end encrypted (E2EE) Matrix messages. Designed for bot-to-bot communication — particularly [Claude Code](https://claude.ai/claude-code) talking to [OpenClaw](https://github.com/AnotherElkim/OpenClaw) via Matrix.
 
 ## Why
 
@@ -43,7 +43,7 @@ sudo pacman -S libolm
 Install on the same machine as your OpenClaw instance. The bridge needs persistent storage for encryption keys, and colocating it with OpenClaw means the shortest path between Claude Code and your bot — no extra infrastructure.
 
 ```bash
-git clone https://github.com/AnotherElkim/matrix-e2ee-bridge.git
+git clone https://github.com/elkimek/matrix-e2ee-bridge.git
 cd matrix-e2ee-bridge
 python3 -m venv ~/.matrix-bridge-venv
 ~/.matrix-bridge-venv/bin/pip install .
@@ -129,17 +129,49 @@ matrix-bridge --json read --limit 3
 # [{"sender": "@user:matrix.org", "body": "hello", ...}]
 ```
 
-## Claude Code integration
+## MCP server
 
-Claude Code runs on your local machine but the bridge lives on your OpenClaw server. Use SSH to invoke it:
+The bridge includes an [MCP](https://modelcontextprotocol.io/) server that exposes Matrix messaging as tools. This lets Claude Code (or any MCP client) send and read encrypted messages directly — no SSH required.
+
+### Install with MCP support
+
+```bash
+pip install '.[mcp]'
+```
+
+### Configure in Claude Code
+
+Add to your `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "matrix": {
+      "command": "/path/to/venv/bin/matrix-bridge-mcp"
+    }
+  }
+}
+```
+
+### Available tools
+
+| Tool | Description |
+|------|-------------|
+| `send_message` | Send a message to a room (with optional @mention) |
+| `send_and_wait` | Send a message and wait for a reply |
+| `read_messages` | Read recent messages, decrypting E2EE automatically |
+| `list_rooms` | List joined rooms with encryption status |
+| `join_room` | Join a room by ID or alias |
+
+### SSH fallback
+
+If MCP isn't available, Claude Code can use SSH to invoke the CLI:
 
 ```bash
 ssh user@your-openclaw-server 'matrix-bridge send "message"'
 ssh user@your-openclaw-server 'matrix-bridge read --limit 5'
 ssh user@your-openclaw-server 'matrix-bridge send-wait "question?" --timeout 30'
 ```
-
-Claude Code can call these commands via its Bash tool to talk to your OpenClaw bot through encrypted Matrix.
 
 ## Configuration
 
