@@ -10,7 +10,7 @@ Use it to give your CLI tools, bots, or AI agents the ability to participate in 
 
 ## Quick start
 
-1. Install `libolm` on your OpenClaw server (see [prerequisites](#prerequisites))
+1. Install `libolm` (see [prerequisites](#prerequisites))
 2. Install the bridge: `pip install .` (see [install](#install))
 3. Run setup: `matrix-bridge setup --user-id @yourbot:matrix.org --default-room '!roomid:matrix.org'`
 4. Test it: `matrix-bridge send "hello"` and `matrix-bridge read`
@@ -40,7 +40,7 @@ sudo pacman -S libolm
 
 ## Install
 
-Install on the same machine as your OpenClaw instance. The bridge needs persistent storage for encryption keys, and colocating it with OpenClaw means the shortest path between Claude Code and your bot — no extra infrastructure.
+Install locally on the machine where Claude Code runs. The bridge needs persistent storage for encryption keys.
 
 ```bash
 git clone https://github.com/elkimek/matrix-e2ee-bridge.git
@@ -62,7 +62,7 @@ Before running setup:
 2. Join the account to an E2EE room with your OpenClaw bot
 3. Copy the room ID (in Element: Room Settings > Advanced > Internal room ID)
 
-Then run setup once on the OpenClaw server:
+Then run setup once:
 
 ```bash
 matrix-bridge setup \
@@ -184,16 +184,6 @@ Add a `SessionStart` hook to `.claude/settings.local.json` so Claude Code announ
     ]
   }
 }
-```
-
-### SSH fallback
-
-If MCP isn't available, Claude Code can use SSH to invoke the CLI:
-
-```bash
-ssh user@your-openclaw-server 'matrix-bridge send "message"'
-ssh user@your-openclaw-server 'matrix-bridge read --limit 5'
-ssh user@your-openclaw-server 'matrix-bridge send-wait "question?" --timeout 30'
 ```
 
 ## Configuration
