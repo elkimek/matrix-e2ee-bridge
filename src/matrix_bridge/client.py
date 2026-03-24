@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -25,6 +26,7 @@ class MatrixE2EEClient:
         self.config = config
         config.ensure_dirs()
         self._has_synced = False
+        self._sync_task: asyncio.Task | None = None
 
         client_config = AsyncClientConfig(
             store_sync_tokens=True,
@@ -122,6 +124,7 @@ class MatrixE2EEClient:
             room_id=room_id,
             message_type="m.room.message",
             content=content,
+            ignore_unverified_devices=True,
         )
         if hasattr(resp, "event_id"):
             return resp.event_id
@@ -169,5 +172,85 @@ class MatrixE2EEClient:
             })
         return rooms
 
+    async def start_sync(self) -> None:
+        """Start a background sync loop (for long-running MCP server)."""
+        synced = asyncio.Event()
+
+        async def _sync_loop():
+            await self.client.sync(timeout=30000, full_state=True)
+            self._has_synced = True
+            if self.client.should_upload_keys:
+                await self.client.keys_upload()
+            apply_trust_policy(self.client, self.config.trust_mode)
+            for room in self.client.rooms.values():
+                if room.encrypted:
+                    room.ignore_unverified_devices = True
+            synced.set()
+            logger.info("Initial sync complete")
+            while True:
+                try:
+                    await self.client.sync(timeout=30000)
+                    apply_trust_policy(self.client, self.config.trust_mode)
+                except Exception as e:
+                    logger.warning(f"Sync error: {e}")
+                    await asyncio.sleep(5)
+
+        self._sync_task = asyncio.create_task(_sync_loop())
+        await asyncio.wait_for(synced.wait(), timeout=60)
+
+    async def get_new_messages(
+        self,
+        room_id: str,
+        my_user_id: str,
+        after_event_id: str | None = None,
+        timeout_ms: int = 30000,
+    ) -> list[dict]:
+        """Poll for new messages from others after a specific event."""
+        messages = await self.read_messages(room_id, 20)
+
+        if not after_event_id:
+            return [m for m in messages if m["sender"] != my_user_id][-5:]
+
+        idx = next(
+            (i for i, m in enumerate(messages) if m["event_id"] == after_event_id),
+            -1,
+        )
+        if idx == -1:
+            return [m for m in messages if m["sender"] != my_user_id][-5:]
+
+        after = [m for m in messages[idx + 1:] if m["sender"] != my_user_id]
+        if after:
+            return after
+
+        start = asyncio.get_event_loop().time()
+        timeout_s = timeout_ms / 1000
+        while asyncio.get_event_loop().time() - start < timeout_s:
+            await asyncio.sleep(2)
+            fresh = await self.read_messages(room_id, 20)
+            fresh_idx = next(
+                (i for i, m in enumerate(fresh) if m["event_id"] == after_event_id),
+                -1,
+            )
+            if fresh_idx == -1:
+                continue
+            replies = [m for m in fresh[fresh_idx + 1:] if m["sender"] != my_user_id]
+            if replies:
+                return replies
+
+        return []
+
+    async def join_room(self, room_id: str) -> str:
+        """Join a room by ID or alias."""
+        resp = await self.client.join(room_id)
+        if hasattr(resp, "room_id"):
+            return resp.room_id
+        raise RuntimeError(f"Failed to join: {resp}")
+
     async def close(self) -> None:
+        if self._sync_task:
+            self._sync_task.cancel()
+            try:
+                await self._sync_task
+            except asyncio.CancelledError:
+                pass
         await self.client.close()
